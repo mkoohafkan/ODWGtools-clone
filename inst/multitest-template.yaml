@@ -1,0 +1,16 @@
+data_specifications:
+  parameter_field: PARAM
+  datetime_field: DATETIME
+  station_field: STATION
+  value_field: VALUE
+
+parameters:
+  salinity:
+    rtqc_gap:
+      x: DATETIME
+      increment: 1 hours
+      condition: is
+    rtqc_range: 
+      x: VALUE
+      sensor.range: [0, 1000]
+      user.range: [10, 900]

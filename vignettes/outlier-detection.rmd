@@ -1,0 +1,139 @@
+---
+title: "Outlier Detection"
+author: "Michael Koohafkan"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Outlier Detection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette describes functions available for outlier detection,
+i.e., the detection of data Values outside some specification based
+on the statistical or structural distribution of Values.
+
+## General structure and output
+
+All outlier detection functions follow a similar template of inputs
+and outputs. All outlier detection functions accept the following 
+arguments:
+
+ 1. a vector of data Values;
+ 2. a logical "mask" used to restrict the calculation of certain
+   parameters to a subset of the data; and
+ 3. A specification of thresholds that discriminate between 
+    non-outliers, "mild" outliers, and "extreme" outliers.
+
+All functions return an ordered factor tagging each data Value
+as a non-outlier (1), a mild outlier (2), or an extreme outlier (3).
+Some outlier detection functions can alternatively return the actual
+test statistic or score used to classify the data by specifying the
+argument `return.score = TRUE`.
+
+## Parametric approaches
+
+`ODWGtools` provides the following functions for parametric
+(distribution-based) outlier detection:
+
+ - `outlier_tscore()`: outlier detection based on the one-sample
+   t-test. Note that for sample sizes greater than 30, the t-test
+   (t-distribution) approach is equivalent to the z-score 
+   (normal distribution) approach.
+ - `outlier_chisq()`: outlier detection based on the $\chi^2$
+   distribution.
+
+## Non-parametric approaches
+
+`ODWGtools` provides the following functions for non-parametric
+(quantile-based) outlier detection:
+ 
+ - `outlier_tukey()`: Tukey's test for outliers (interquartile range).
+ - `outlier_mad()`: Outlier detection based on median absolute
+   deviation (MAD).
+
+## Other approaches
+
+`ODWGtools` provides the following additional functions 
+for outlier detection:
+ 
+ - `outlier_lof()`: Local Outlier Factor (LOF) test for outliers.
+ - `outlier_iforest()`: outlier detection based on Isolation Forests.
+ - `outlier_glosh()`:  Global-Local Outlier Score from Hierarchies (GLOSH) test for outliers.
+ - `outlier_hdbscan()`: outlier detection based on Hierarchical DBSCAN.
+
+## Example Application
+
+We use the [cder package](https://cran.r-project.org/package=cder)
+to download a sample of Belden's Landing salinity data
+to demonstrate the outlier detection functions.
+
+```{r}
+library(cder)
+bdl = cdec_query("BDL", 100L, "E", "2018-07-01", "2018-08-01")
+```
+
+Univariate outlier detection functions are predicated with
+`outlier_`.
+
+```{r}
+library(ODWGtools)
+
+bdl["tscore"] = outlier_tscore(bdl$Value)
+bdl["tukey"] = outlier_tukey(bdl$Value)
+bdl["mad"] = outlier_mad(bdl$Value)
+```
+
+Multivariate outlier detection methods are predicated with
+`moutlier_`.
+
+```{r}
+bdl["chisq"] = moutlier_chisq(bdl[c("DateTime", "Value")])
+
+bdl["lof"] = moutlier_lof(bdl[c("DateTime", "Value")])
+bdl["iforest"] = moutlier_iforest(bdl[c("DateTime", "Value")])
+```
+
+
+The [`slider`](https://cran.r-project.org/package=slider) package can
+be used to apply `ODWGtools` functions to moving windows. 
+
+```{r}
+library(slider)
+
+bdl["tscore.window"] = slide_chr(bdl$Value, ~outlier_tscore(.x)[49], 
+  .before = 48, .after = 48)
+```
+
+`slider` performs row-wise iteration over dataframes, so the syntax for
+using sliding windows with the multivariate outlier detection functions
+is straightforward provided you pass a dataframe (rather than a list)).
+
+```{r}
+bdl["chisq.window"] = slide_chr(bdl[c("DateTime", "Value")],
+  ~ moutlier_chisq(.x)[49],
+  .before = 48, .after = 48, .complete = TRUE)
+
+# this won't work
+# bdl["chisq.window"] = slide_chr(as.list(bdl[c("DateTime", "Value")]),
+#   ~ moutlier_chisq(.x)[49], 
+#   .before = 48, .after = 48, .complete = TRUE)
+```
+
+Finally, a vignette isn't really complete without some plots.
+
+```{r}
+library(ggplot2)
+
+ggplot(bdl) + theme_bw() +
+  aes(x = DateTime, y = Value, color = tscore) + 
+  geom_point()
+
+ggplot(bdl) +
+  aes(x = DateTime, y = Value, color = tscore.window) +
+  geom_point()
+
+ggplot(bdl) + aes(x = DateTime, y = Value, color = chisq) + geom_point()
+
+ggplot(bdl) + aes(x = DateTime, y = Value, color = chisq.window) + geom_point()
+```

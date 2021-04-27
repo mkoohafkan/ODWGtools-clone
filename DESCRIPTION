@@ -1,0 +1,44 @@
+Package: ODWGtools
+Title: Outlier Detection Working Group Toolbox
+Version: 0.6.0.9000
+Authors@R: person("Michael", "Koohafkan", email = "Michael.Koohafkan@water.ca.gov", role = c("aut", "cre"))
+Description: A collection of tools developed by the Outlier Detection Working Group.
+Depends: R (>= 3.5)
+Imports: 
+    stats,
+    graphics,
+    rlang (>= 0.4),
+    dplyr (>= 0.8),
+    slider (>= 0.1),
+    lubridate (>= 1.7),
+    purrr (>= 0.3),
+    yaml (>= 2.2)
+Suggests: 
+    dbscan (>= 1.1),
+    solitude (>= 0.2),
+    forecast (>= 8.5),
+    tidyr (>= 1.0),
+    ggplot2 (>= 3.1),
+    knitr (>= 1.21),
+    rmarkdown (>= 1.11),
+    cder (>= 0.2),
+    testthat (>= 3.0)
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+VignetteBuilder: knitr
+RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE)
+Collate: 
+    'ODWGtools.r'
+    'adjust.r'
+    'aggregate.r'
+    'outliers.r'
+    'anomaly.r'
+    'convert.r'
+    'util.r'
+    'rtqc.r'
+    'crossing.r'
+    'gapfill.r'
+    'outliers-multivar.r'
+    'smooth.r'
